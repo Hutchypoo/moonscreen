@@ -1,8 +1,6 @@
 # Moonscreen
 
-A satirical product landing page for **Moonscreen** — a (fictional) cream you apply to your chest at night to protect your skin from the moon's "harmful rays."
 
-> ⚠️ This is a parody/joke site. Moonscreen is not a real product, makes no genuine health claims, and moonlight is not a known cause of skin cancer. For real skin health advice, talk to a dermatologist.
 
 ## What it is
 
