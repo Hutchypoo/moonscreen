@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Moonscreen — Sleep Safe from Lunar Rays</title>
+<script>if (sessionStorage.getItem('ms_auth') !== '1') document.documentElement.className = 'locked';</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -203,9 +204,49 @@
     .grid3, .steps, .stats, .quotes { grid-template-columns: 1fr; }
     nav .links a:not(.btn) { display: none; }
   }
+
+  /* Login gate */
+  html.locked body > *:not(#gate) { display: none !important; }
+  #gate {
+    position: fixed; inset: 0; z-index: 1000;
+    display: grid; place-items: center; padding: 24px;
+    background: radial-gradient(circle at 50% 30%, #141a3a, #0a0e27 70%);
+  }
+  #gate .panel {
+    width: 100%; max-width: 360px; text-align: center;
+    background: linear-gradient(160deg, var(--night-2), rgba(91,108,240,0.12));
+    border: 1px solid rgba(123,140,255,0.3); border-radius: 24px;
+    padding: 40px 32px; box-shadow: 0 0 60px rgba(123,140,255,0.25);
+  }
+  #gate .moon-mini {
+    width: 64px; height: 64px; margin: 0 auto 20px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #fff, var(--moon) 45%, #c4c0a8 100%);
+    box-shadow: 0 0 30px rgba(244,241,222,0.4);
+  }
+  #gate h2 { font-size: 1.5rem; margin-bottom: 6px; }
+  #gate p { color: var(--muted); font-size: 0.95rem; margin-bottom: 24px; }
+  #gate input {
+    width: 100%; padding: 12px 16px; margin-bottom: 12px;
+    background: rgba(10,14,39,0.6); border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 12px; color: var(--text); font-size: 1rem; font-family: inherit;
+  }
+  #gate input:focus { outline: none; border-color: var(--accent); }
+  #gate button { width: 100%; margin-top: 6px; }
+  #gate .err { color: #ff8a8a; font-size: 0.88rem; min-height: 1.2em; margin-top: 10px; }
 </style>
 </head>
 <body>
+<div id="gate">
+  <form class="panel" id="gate-form" autocomplete="off">
+    <div class="moon-mini"></div>
+    <h2>Moonscreen</h2>
+    <p>Members only — please sign in.</p>
+    <input type="text" id="gate-user" placeholder="Username" autocapitalize="off" autocomplete="username">
+    <input type="password" id="gate-pass" placeholder="Password" autocomplete="current-password">
+    <button type="submit" class="btn">Enter</button>
+    <div class="err" id="gate-err"></div>
+  </form>
+</div>
 <div class="stars"></div>
 
 <nav>
@@ -376,5 +417,42 @@
   </div>
 </footer>
 
+<script>
+(function () {
+  // NOTE: client-side gate only — NOT real security. Repo is public; this just
+  // keeps casual visitors out. Passwords stored as SHA-256 hashes, not plaintext.
+  var USERS = {
+    hutch: '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4',
+    glenn: '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4'
+  };
+  function unlock() {
+    sessionStorage.setItem('ms_auth', '1');
+    document.documentElement.classList.remove('locked');
+  }
+  if (sessionStorage.getItem('ms_auth') === '1') { unlock(); return; }
+
+  async function sha256(str) {
+    var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+    return Array.from(new Uint8Array(buf)).map(function (b) {
+      return b.toString(16).padStart(2, '0');
+    }).join('');
+  }
+
+  var form = document.getElementById('gate-form');
+  var err = document.getElementById('gate-err');
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var user = document.getElementById('gate-user').value.trim().toLowerCase();
+    var pass = document.getElementById('gate-pass').value;
+    var expected = USERS[user];
+    if (expected && (await sha256(pass)) === expected) {
+      unlock();
+    } else {
+      err.textContent = 'Incorrect username or password.';
+      document.getElementById('gate-pass').value = '';
+    }
+  });
+})();
+</script>
 </body>
 </html>
